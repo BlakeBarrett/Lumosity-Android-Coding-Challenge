@@ -121,7 +121,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void getPlaces(final Location currentLocation) {
-        final String key = getString(R.string.google_maps_key);
+        final String key = getString(R.string.google_places_key);
         PlaceFetcher.getPlaces(currentLocation, "restaurant", key, new PlaceFetcher.PlacesFetchedCompletionRunnable(){
             @Override
             public void run(final String result) {
@@ -131,6 +131,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                        "html_attributions" : [],
                        "results" : [],
                        "status" : "REQUEST_DENIED"
+                    }
+                    {
+                       "html_attributions" : [],
+                       "results" : [],
+                       "status" : "INVALID_REQUEST"
                     }
                  */
                 handlePlaces(result);
@@ -148,7 +153,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * @param location The Lat/Long of the new place location.
      */
     private void addLocationToMap(final Location location) {
-        LatLng latlng = new LatLng(location.getLatitude(), location.getLongitude());
+        final LatLng latlng = new LatLng(location.getLatitude(), location.getLongitude());
         mMap.addMarker(new MarkerOptions().position(latlng));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
     }

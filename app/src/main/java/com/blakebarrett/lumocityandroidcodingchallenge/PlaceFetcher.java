@@ -3,6 +3,8 @@ package com.blakebarrett.lumocityandroidcodingchallenge;
 import android.location.Location;
 import android.os.AsyncTask;
 
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -68,8 +70,17 @@ public class PlaceFetcher {
         return response;
     }
 
+    public static Object fromJson(final String jsonString) {
+        try {
+            final JSONObject object = new JSONObject(jsonString);
+            return object.optJSONArray("results");
+        } catch (final Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public interface PlacesFetchedCompletionRunnable {
         void run(final String result);
     }
-
 }
