@@ -1,28 +1,25 @@
 package com.blakebarrett.lumocityandroidcodingchallenge;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 
-import com.google.android.gms.location.places.Place;
-import com.google.android.gms.location.places.PlaceFilter;
-import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
-    private static final int REQUEST_PLACE_PICKER = 97;
+    private static final int REQUEST_FINE_LOCATION = 80;
 
     private LocationManager locationManager;
     private GoogleMap mMap;
@@ -55,51 +52,48 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
     }
 
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode,
-                                    int resultCode, Intent data) {
-
-        if (requestCode == REQUEST_PLACE_PICKER
-                && resultCode == Activity.RESULT_OK) {
-
-            // The user has selected a place. Extract the name and address.
-            final Place place = PlacePicker.getPlace(data, this);
-
-            final PlaceFilter placeFilter = new PlaceFilter();
-            placeFilter.getPlaceIds();
-
-            mMap.addMarker(new MarkerOptions().position(place.getLatLng()).title((String) place.getName()));
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(place.getLatLng()));
-
-        } else {
-            super.onActivityResult(requestCode, resultCode, data);
-        }
-    }
-
     private boolean checkLocationPermissions() {
         final int accessFineLocation = ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION);
         final int accessCoarseLocation = ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION);
-        return accessFineLocation != PackageManager.PERMISSION_GRANTED &&
-                accessCoarseLocation != PackageManager.PERMISSION_GRANTED;
+
+        final boolean fineLocationGranted = accessFineLocation != PackageManager.PERMISSION_GRANTED;
+        final boolean coarseLocationGranted = accessCoarseLocation != PackageManager.PERMISSION_GRANTED;
+
+        return fineLocationGranted && coarseLocationGranted;
     }
 
-    // TODO: Build this: https://developer.android.com/training/location/retrieve-current.html
-    private void getCurrentLocation() {
+    private void requestPermissions() {
+        ActivityCompat.requestPermissions(this,
+                new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                REQUEST_FINE_LOCATION);
+    }
 
-        // Register the listener with the Location Manager to receive location updates
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_FINE_LOCATION: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    getCurrentLocation();
+                    // } else {
+                    // screw this user.
+                }
+
+            }
+        }
+    }
+
+    private void getCurrentLocation() {
         if (checkLocationPermissions()) {
+            requestPermissions();
             return;
         }
 
+        // Register the listener with the Location Manager to receive location updates
         final LocationListener locationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
                 // Called when a new location is found by the network location provider.
                 getPlaces(location);
-
+                // unregister for location updates -- we don't care any longer.
                 try {
                     locationManager.removeUpdates(this);
                 } catch (final SecurityException e) {
@@ -126,13 +120,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
-    // TODO: Make this request: https://maps.googleapis.com/maps/api/place/radarsearch/json?location=51.503186,-0.126446&radius=5000&type=museum&key=YOUR_API_KEY
     private void getPlaces(final Location currentLocation) {
-        // https://maps.googleapis.com/maps/api/place/radarsearch/output?type=restaurant&key=AIzaSyAS00GUmuv4Z_oWFe1yJq1gu1cIr5ycElU
         final String key = getString(R.string.google_maps_key);
         PlaceFetcher.getPlaces(currentLocation, "restaurant", key, new PlaceFetcher.PlacesFetchedCompletionRunnable(){
             @Override
             public void run(final String result) {
+                /*
+                    {
+                       "error_message" : "This IP, site or mobile application is not authorized to use this API key. Request received from IP address 69.181.195.233, with empty referer",
+                       "html_attributions" : [],
+                       "results" : [],
+                       "status" : "REQUEST_DENIED"
+                    }
+                 */
                 handlePlaces(result);
             }
         });
@@ -140,6 +140,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void handlePlaces(final String places) {
 
+    }
+
+    /**
+     * Adds a new point marker on teh map and centers that in view.
+     *
+     * @param location The Lat/Long of the new place location.
+     */
+    private void addLocationToMap(final Location location) {
+        LatLng latlng = new LatLng(location.getLatitude(), location.getLongitude());
+        mMap.addMarker(new MarkerOptions().position(latlng));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
     }
 
 }

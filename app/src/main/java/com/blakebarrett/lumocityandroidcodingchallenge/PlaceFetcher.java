@@ -3,24 +3,20 @@ package com.blakebarrett.lumocityandroidcodingchallenge;
 import android.location.Location;
 import android.os.AsyncTask;
 
-import com.google.android.gms.maps.model.LatLng;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Scanner;
 
 /**
+ * PlaceFetcher fetches places using Google's radarsearch API.
+ *
  * Created by Blake on 6/25/16.
  */
 public class PlaceFetcher {
 
-    public interface PlacesFetchedCompletionRunnable {
-        public void run(final String result);
-    }
-
     public static void getPlaces(final Location origin, final String placeType, final String KEY,
-                          final PlacesFetchedCompletionRunnable completionRunnable) {
+                                 final PlacesFetchedCompletionRunnable completionRunnable) {
         // TODO: Build this request
         // https://maps.googleapis.com/maps/api/place/radarsearch/json?location=51.503186,-0.126446&radius=5000&type=museum&key=YOUR_API_KEY
 
@@ -31,6 +27,7 @@ public class PlaceFetcher {
         buffer.append("&type=").append(placeType);
         buffer.append("&key=").append(KEY);
 
+        // https://maps.googleapis.com/maps/api/place/radarsearch/json?location=37.7591103,-122.5087203&type=restaurant&key=AIzaSyAS00GUmuv4Z_oWFe1yJq1gu1cIr5ycElU
         final String urlString = buffer.toString();
 
         new AsyncTask<Void, Void, String>() {
@@ -69,6 +66,10 @@ public class PlaceFetcher {
             return null;
         }
         return response;
+    }
+
+    public interface PlacesFetchedCompletionRunnable {
+        void run(final String result);
     }
 
 }
