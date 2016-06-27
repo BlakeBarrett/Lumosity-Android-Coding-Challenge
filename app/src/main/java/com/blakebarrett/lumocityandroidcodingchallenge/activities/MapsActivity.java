@@ -131,19 +131,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         PlaceFetcher.getPlaces(currentLocation, PlaceFetcher.RESTAURANT, key, new PlaceFetcher.PlacesFetchedCompletionRunnable() {
             @Override
             public void run(final String result) {
-                /*
-                    {
-                       "error_message" : "This IP, site or mobile application is not authorized to use this API key. Request received from IP address 69.181.195.233, with empty referer",
-                       "html_attributions" : [],
-                       "results" : [],
-                       "status" : "REQUEST_DENIED"
-                    }
-                    {
-                       "html_attributions" : [],
-                       "results" : [],
-                       "status" : "INVALID_REQUEST"
-                    }
-                 */
                 handlePlaces(result);
             }
         });
@@ -151,6 +138,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void handlePlaces(final String placesString) {
         final List<Place> places = PlaceFetcher.fromJson(placesString);
+        if (places == null) {
+            return;
+        }
         for (int i = 0; i < places.size(); i++) {
             final Place current = places.get(i);
             addLocationToMap(current);
@@ -166,6 +156,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         final LatLng latlng = location.getLatLng();
         final MarkerOptions options = new MarkerOptions();
         options.position(latlng);
+        options.title((String) location.getName());
         mMap.addMarker(options);
     }
 
@@ -173,5 +164,4 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         final LatLng latlng = new LatLng(location.getLatitude(), location.getLongitude());
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latlng, 17.0f));
     }
-
 }
