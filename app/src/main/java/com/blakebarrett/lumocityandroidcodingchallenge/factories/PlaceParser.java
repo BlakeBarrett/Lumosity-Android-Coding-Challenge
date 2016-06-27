@@ -1,4 +1,4 @@
-package com.blakebarrett.lumocityandroidcodingchallenge;
+package com.blakebarrett.lumocityandroidcodingchallenge.factories;
 
 import android.net.Uri;
 

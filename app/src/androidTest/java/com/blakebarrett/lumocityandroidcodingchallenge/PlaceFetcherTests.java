@@ -2,6 +2,7 @@ package com.blakebarrett.lumocityandroidcodingchallenge;
 
 import android.test.AndroidTestCase;
 
+import com.blakebarrett.lumocityandroidcodingchallenge.network.PlaceFetcher;
 import com.google.android.gms.location.places.Place;
 
 import java.util.List;

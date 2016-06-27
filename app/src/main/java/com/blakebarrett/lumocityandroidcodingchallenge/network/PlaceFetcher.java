@@ -1,15 +1,18 @@
-package com.blakebarrett.lumocityandroidcodingchallenge;
+package com.blakebarrett.lumocityandroidcodingchallenge.network;
 
 import android.location.Location;
 import android.os.AsyncTask;
 
+import com.blakebarrett.lumocityandroidcodingchallenge.factories.PlaceParser;
 import com.google.android.gms.location.places.Place;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 import java.util.Scanner;
@@ -21,12 +24,14 @@ import java.util.Scanner;
  */
 public class PlaceFetcher {
 
+    public static final String RESTAURANT = "restaurant";
+
     public static void getPlaces(final Location origin, final String placeType, final String KEY,
                                  final PlacesFetchedCompletionRunnable completionRunnable) {
         // TODO: Build this request
         // https://maps.googleapis.com/maps/api/place/radarsearch/json?location=51.503186,-0.126446&radius=5000&type=museum&key=YOUR_API_KEY
 
-        final StringBuffer buffer = new StringBuffer("https://maps.googleapis.com/maps/api/place/radarsearch/json?location=");
+        final StringBuffer buffer = new StringBuffer("https://maps.googleapis.com/maps/api/place/radarsearch/json?radius=500&location=");
         buffer.append(String.valueOf(origin.getLatitude()));
         buffer.append(",");
         buffer.append(String.valueOf(origin.getLongitude()));
@@ -41,10 +46,12 @@ public class PlaceFetcher {
             @Override
             protected String doInBackground(Void... params) {
 
-                final InputStream stream;
+
                 try {
-                    stream = new URL(urlString).openStream();
-                    return inputStreamToString(stream);
+                    final HttpURLConnection connection = (HttpURLConnection) new URL(urlString).openConnection();
+                    final InputStream stream = new BufferedInputStream(connection.getInputStream());
+                    final String result = inputStreamToString(stream);
+                    return result;
                 } catch (IOException e) {
                     e.printStackTrace();
                     return null;

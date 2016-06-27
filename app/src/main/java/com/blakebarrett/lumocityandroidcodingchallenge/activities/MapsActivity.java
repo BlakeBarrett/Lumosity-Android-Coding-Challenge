@@ -1,4 +1,4 @@
-package com.blakebarrett.lumocityandroidcodingchallenge;
+package com.blakebarrett.lumocityandroidcodingchallenge.activities;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -10,6 +10,8 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 
+import com.blakebarrett.lumocityandroidcodingchallenge.R;
+import com.blakebarrett.lumocityandroidcodingchallenge.network.PlaceFetcher;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -93,9 +95,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         // Register the listener with the Location Manager to receive location updates
         final LocationListener locationListener = new LocationListener() {
-            public void onLocationChanged(Location location) {
+            public void onLocationChanged(final Location location) {
                 // Called when a new location is found by the network location provider.
                 getPlaces(location);
+                centerMap(location);
                 // unregister for location updates -- we don't care any longer.
                 try {
                     locationManager.removeUpdates(this);
@@ -125,7 +128,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void getPlaces(final Location currentLocation) {
         final String key = getString(R.string.google_places_key);
-        PlaceFetcher.getPlaces(currentLocation, "restaurant", key, new PlaceFetcher.PlacesFetchedCompletionRunnable(){
+        PlaceFetcher.getPlaces(currentLocation, PlaceFetcher.RESTAURANT, key, new PlaceFetcher.PlacesFetchedCompletionRunnable() {
             @Override
             public void run(final String result) {
                 /*
@@ -147,9 +150,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void handlePlaces(final String placesString) {
-        List<Place> places = PlaceFetcher.fromJson(placesString);
+        final List<Place> places = PlaceFetcher.fromJson(placesString);
         for (int i = 0; i < places.size(); i++) {
-            Place current = places.get(i);
+            final Place current = places.get(i);
             addLocationToMap(current);
         }
     }
@@ -161,8 +164,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      */
     private void addLocationToMap(final Place location) {
         final LatLng latlng = location.getLatLng();
-        mMap.addMarker(new MarkerOptions().position(latlng));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
+        final MarkerOptions options = new MarkerOptions();
+        options.position(latlng);
+        mMap.addMarker(options);
+    }
+
+    private void centerMap(final Location location) {
+        final LatLng latlng = new LatLng(location.getLatitude(), location.getLongitude());
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latlng, 17.0f));
     }
 
 }
