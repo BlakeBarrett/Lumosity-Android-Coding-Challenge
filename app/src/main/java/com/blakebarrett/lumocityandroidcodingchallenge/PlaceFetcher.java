@@ -3,11 +3,15 @@ package com.blakebarrett.lumocityandroidcodingchallenge;
 import android.location.Location;
 import android.os.AsyncTask;
 
+import com.google.android.gms.location.places.Place;
+
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -70,10 +74,12 @@ public class PlaceFetcher {
         return response;
     }
 
-    public static Object fromJson(final String jsonString) {
+    public static List<Place> fromJson(final String jsonString) {
+
         try {
             final JSONObject object = new JSONObject(jsonString);
-            return object.optJSONArray("results");
+            final JSONArray results = object.optJSONArray("results");
+            return PlaceParser.parsePlaces(results);
         } catch (final Exception e) {
             e.printStackTrace();
             return null;

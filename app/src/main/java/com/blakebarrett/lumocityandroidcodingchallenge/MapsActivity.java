@@ -10,12 +10,15 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 
+import com.google.android.gms.location.places.Place;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+
+import java.util.List;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -143,8 +146,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-    private void handlePlaces(final String places) {
-
+    private void handlePlaces(final String placesString) {
+        List<Place> places = PlaceFetcher.fromJson(placesString);
+        for (int i = 0; i < places.size(); i++) {
+            Place current = places.get(i);
+            addLocationToMap(current);
+        }
     }
 
     /**
@@ -152,8 +159,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      *
      * @param location The Lat/Long of the new place location.
      */
-    private void addLocationToMap(final Location location) {
-        final LatLng latlng = new LatLng(location.getLatitude(), location.getLongitude());
+    private void addLocationToMap(final Place location) {
+        final LatLng latlng = location.getLatLng();
         mMap.addMarker(new MarkerOptions().position(latlng));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
     }

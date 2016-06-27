@@ -2,6 +2,10 @@ package com.blakebarrett.lumocityandroidcodingchallenge;
 
 import android.test.AndroidTestCase;
 
+import com.google.android.gms.location.places.Place;
+
+import java.util.List;
+
 /**
  * Created by Blake on 6/26/16.
  */
@@ -219,8 +223,12 @@ public class PlaceFetcherTests extends AndroidTestCase {
     }
 
     public void testParse() {
-        final Object resultant = PlaceFetcher.fromJson(API_RESPONSE);
-        assertNotNull(resultant);
+        final List<Place> resultants = PlaceFetcher.fromJson(API_RESPONSE);
+        for (int i = 0; i < resultants.size(); i++) {
+            Place currentPlace = resultants.get(i);
+            assertNotNull(currentPlace);
+        }
+        assertNotNull(resultants);
     }
 
 }
