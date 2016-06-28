@@ -24,7 +24,7 @@ public class PlaceParser {
 
             @Override
             public String getId() {
-                return placeJson.optString("id");
+                return placeJson.optString("place_id");
             }
 
             @Override

@@ -24,11 +24,12 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.List;
 import java.util.WeakHashMap;
+import java.util.concurrent.CountDownLatch;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private static final int REQUEST_FINE_LOCATION = 80;
-    final String API_KEY = getString(R.string.google_places_key);
+    String API_KEY;
     WeakHashMap<Marker, Place> mMarkers = new WeakHashMap<>();
     private LocationManager locationManager;
     private GoogleMap mMap;
@@ -36,6 +37,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        API_KEY = getString(R.string.google_places_key);
+
         setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -70,8 +74,37 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public View getInfoWindow(final Marker marker) {
                 final Place place = mMarkers.get(marker);
-                PlaceFetcher.getPlaceInfo(place.getId(), API_KEY, null);
-                return null;
+                if (place == null) {
+                    return null;
+                }
+
+                final View view = findViewById(R.id.map_info_window);
+//                final TextView name = (TextView) view.findViewById(R.id.place_name);
+//                final TextView address = (TextView) view.findViewById(R.id.place_address);
+//                final TextView website = (TextView) view.findViewById(R.id.place_website);
+
+                final CountDownLatch latch = new CountDownLatch(1);
+
+                final String placeId = place.getId();
+
+                PlaceFetcher.getPlaceInfo(placeId, API_KEY, new PlaceFetcher.PlacesFetchedCompletionRunnable() {
+                    @Override
+                    public void run(final String result) {
+                        final Place updated = PlaceFetcher.placeFromPlaceInfoJson(result);
+//                        name.setText(updated.getName());
+//                        address.setText(updated.getAddress());
+//                        website.setText(updated.getWebsiteUri().toString());
+
+                        latch.countDown();
+                    }
+                });
+
+                try {
+                    latch.await();
+                } catch (final InterruptedException e) {
+                    e.printStackTrace();
+                }
+                return view;
             }
 
             @Override
