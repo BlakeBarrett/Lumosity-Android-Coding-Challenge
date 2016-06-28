@@ -26,10 +26,20 @@ public class PlaceFetcher {
 
     public static final String RESTAURANT = "restaurant";
 
+    public static void getPlaceInfo(final String placeId, final String KEY,
+                                    final PlacesFetchedCompletionRunnable completionRunnable) {
+
+        final StringBuffer buffer = new StringBuffer("https://maps.googleapis.com/maps/api/place/details/json?placeid=");
+        buffer.append(placeId);
+        buffer.append("&key=").append(KEY);
+
+        // https://maps.googleapis.com/maps/api/place/details/json?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4&key=AIzaSyC3nvZJCE0sr-YNs_U3p2_AiAXddCZwq14
+        final String urlString = buffer.toString();
+        doGetRequest(urlString, completionRunnable);
+    }
+
     public static void getPlaces(final Location origin, final String placeType, final String KEY,
                                  final PlacesFetchedCompletionRunnable completionRunnable) {
-        // TODO: Build this request
-        // https://maps.googleapis.com/maps/api/place/radarsearch/json?location=51.503186,-0.126446&radius=5000&type=museum&key=YOUR_API_KEY
 
         final StringBuffer buffer = new StringBuffer("https://maps.googleapis.com/maps/api/place/radarsearch/json?radius=500&location=");
         buffer.append(String.valueOf(origin.getLatitude()));
@@ -40,7 +50,10 @@ public class PlaceFetcher {
 
         // https://maps.googleapis.com/maps/api/place/radarsearch/json?location=37.7591103,-122.5087203&type=restaurant&key=AIzaSyAS00GUmuv4Z_oWFe1yJq1gu1cIr5ycElU
         final String urlString = buffer.toString();
+        doGetRequest(urlString, completionRunnable);
+    }
 
+    private static void doGetRequest(final String urlString, final PlacesFetchedCompletionRunnable completionRunnable) {
         new AsyncTask<Void, Void, String>() {
 
             @Override
@@ -65,7 +78,6 @@ public class PlaceFetcher {
                 }
             }
         }.execute(null, null, null);
-
     }
 
     private static String inputStreamToString(final InputStream inputStream) {
@@ -81,12 +93,22 @@ public class PlaceFetcher {
         return response;
     }
 
-    public static List<Place> fromJson(final String jsonString) {
+    public static List<Place> placesFromJson(final String jsonString) {
 
         try {
             final JSONObject object = new JSONObject(jsonString);
             final JSONArray results = object.optJSONArray("results");
             return PlaceParser.parsePlaces(results);
+        } catch (final Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static Place placeFromPlaceInfoJson(final String jsonString) {
+        try {
+            final JSONObject results = new JSONObject(jsonString).optJSONObject("result");
+            return PlaceParser.parsePlace(results);
         } catch (final Exception e) {
             e.printStackTrace();
             return null;

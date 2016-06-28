@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
+import android.view.View;
 
 import com.blakebarrett.lumocityandroidcodingchallenge.R;
 import com.blakebarrett.lumocityandroidcodingchallenge.network.PlaceFetcher;
@@ -18,14 +19,17 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.List;
+import java.util.WeakHashMap;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private static final int REQUEST_FINE_LOCATION = 80;
-
+    final String API_KEY = getString(R.string.google_places_key);
+    WeakHashMap<Marker, Place> mMarkers = new WeakHashMap<>();
     private LocationManager locationManager;
     private GoogleMap mMap;
 
@@ -55,6 +59,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(final GoogleMap googleMap) {
         mMap = googleMap;
+        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(final Marker marker) {
+
+                return false;
+            }
+        });
+        mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+            @Override
+            public View getInfoWindow(final Marker marker) {
+                final Place place = mMarkers.get(marker);
+                PlaceFetcher.getPlaceInfo(place.getId(), API_KEY, null);
+                return null;
+            }
+
+            @Override
+            public View getInfoContents(final Marker marker) {
+                return null;
+            }
+        });
     }
 
     private boolean checkLocationPermissions() {
@@ -127,8 +151,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void getPlaces(final Location currentLocation) {
-        final String key = getString(R.string.google_places_key);
-        PlaceFetcher.getPlaces(currentLocation, PlaceFetcher.RESTAURANT, key, new PlaceFetcher.PlacesFetchedCompletionRunnable() {
+        PlaceFetcher.getPlaces(currentLocation, PlaceFetcher.RESTAURANT, API_KEY, new PlaceFetcher.PlacesFetchedCompletionRunnable() {
             @Override
             public void run(final String result) {
                 handlePlaces(result);
@@ -137,7 +160,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void handlePlaces(final String placesString) {
-        final List<Place> places = PlaceFetcher.fromJson(placesString);
+        final List<Place> places = PlaceFetcher.placesFromJson(placesString);
         if (places == null) {
             return;
         }
@@ -157,7 +180,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         final MarkerOptions options = new MarkerOptions();
         options.position(latlng);
         options.title((String) location.getName());
-        mMap.addMarker(options);
+        final Marker marker = mMap.addMarker(options);
+        mMarkers.put(marker, location);
     }
 
     private void centerMap(final Location location) {
