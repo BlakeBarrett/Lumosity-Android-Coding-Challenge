@@ -10,6 +10,8 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.view.View;
+import android.view.ViewStub;
+import android.widget.TextView;
 
 import com.blakebarrett.lumocityandroidcodingchallenge.R;
 import com.blakebarrett.lumocityandroidcodingchallenge.network.PlaceFetcher;
@@ -63,39 +65,50 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(final GoogleMap googleMap) {
         mMap = googleMap;
+
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(final Marker marker) {
-
                 return false;
             }
         });
+
+        final ViewStub stub = (ViewStub) findViewById(R.id.map_info_window);
+        final View view;
+        if (stub != null) {
+            view = stub.inflate();
+        } else {
+            view = new View(getBaseContext());
+        }
+
         mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
             @Override
             public View getInfoWindow(final Marker marker) {
+                return view;
+            }
+
+            @Override
+            public View getInfoContents(final Marker marker) {
+
                 final Place place = mMarkers.get(marker);
-                if (place == null) {
+                if (place == null || view == null) {
                     return null;
                 }
 
-                final View view = findViewById(R.id.map_info_window);
-//                final TextView name = (TextView) view.findViewById(R.id.place_name);
-//                final TextView address = (TextView) view.findViewById(R.id.place_address);
-//                final TextView website = (TextView) view.findViewById(R.id.place_website);
+                final TextView name = (TextView) view.findViewById(R.id.place_name);
+                final TextView address = (TextView) view.findViewById(R.id.place_address);
+                final TextView website = (TextView) view.findViewById(R.id.place_website);
 
-                final CountDownLatch latch = new CountDownLatch(1);
 
                 final String placeId = place.getId();
-
+                final CountDownLatch latch = new CountDownLatch(1);
                 PlaceFetcher.getPlaceInfo(placeId, API_KEY, new PlaceFetcher.PlacesFetchedCompletionRunnable() {
                     @Override
                     public void run(final String result) {
                         final Place updated = PlaceFetcher.placeFromPlaceInfoJson(result);
-//                        name.setText(updated.getName());
-//                        address.setText(updated.getAddress());
-//                        website.setText(updated.getWebsiteUri().toString());
-
-                        latch.countDown();
+                        name.setText(updated.getName());
+                        address.setText(updated.getAddress());
+                        website.setText(updated.getWebsiteUri().toString());
                     }
                 });
 
@@ -105,11 +118,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     e.printStackTrace();
                 }
                 return view;
-            }
-
-            @Override
-            public View getInfoContents(final Marker marker) {
-                return null;
             }
         });
     }
