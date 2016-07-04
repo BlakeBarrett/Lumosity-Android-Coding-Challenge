@@ -1,6 +1,7 @@
 package com.blakebarrett.lumocityandroidcodingchallenge.activities;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -9,9 +10,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
-import android.view.View;
-import android.view.ViewStub;
-import android.widget.TextView;
 
 import com.blakebarrett.lumocityandroidcodingchallenge.R;
 import com.blakebarrett.lumocityandroidcodingchallenge.network.PlaceFetcher;
@@ -26,7 +24,6 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -52,7 +49,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         getCurrentLocation();
     }
 
-
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
@@ -64,62 +60,73 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      */
     @Override
     public void onMapReady(final GoogleMap googleMap) {
+        final MapsActivity self = this;
         mMap = googleMap;
-
-//        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
-//            @Override
-//            public boolean onMarkerClick(final Marker marker) {
-//                return false;
-//            }
-//        });
-
-        final ViewStub stub = (ViewStub) findViewById(R.id.map_info_window);
-        final View view;
-        if (stub != null) {
-            view = stub.inflate();
-        } else {
-            view = new View(getBaseContext());
-        }
-
-        mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
-            public View getInfoWindow(final Marker marker) {
+            public boolean onMarkerClick(final Marker marker) {
                 final Place place = mMarkers.get(marker);
 
-                if (place == null || view == null) {
-                    return view;
+                if (place == null) {
+                    return false;
                 }
 
-                final TextView name = (TextView) view.findViewById(R.id.place_name);
-                final TextView address = (TextView) view.findViewById(R.id.place_address);
-                final TextView website = (TextView) view.findViewById(R.id.place_website);
+                final Intent intent = new Intent(self, PlaceInformationActivity.class);
+                intent.putExtra("placeId", place.getId());
+                intent.putExtra("API_KEY", API_KEY);
+                startActivity(intent);
 
-
-                final String placeId = place.getId();
-                final CountDownLatch latch = new CountDownLatch(1);
-                PlaceFetcher.getPlaceInfo(placeId, API_KEY, new PlaceFetcher.PlacesFetchedCompletionRunnable() {
-                    @Override
-                    public void run(final String result) {
-                        final Place updated = PlaceFetcher.placeFromPlaceInfoJson(result);
-                        name.setText(updated.getName());
-                        address.setText(updated.getAddress());
-                        website.setText(updated.getWebsiteUri().toString());
-                    }
-                });
-
-                try {
-                    latch.await();
-                } catch (final InterruptedException e) {
-                    e.printStackTrace();
-                }
-                return view;
-            }
-
-            @Override
-            public View getInfoContents(final Marker marker) {
-                return view;
+                return true;
             }
         });
+//
+//        final ViewStub stub = (ViewStub) findViewById(R.id.map_info_window);
+//        final View view;
+//        if (stub != null) {
+//            view = stub.inflate();
+//        } else {
+//            view = new View(getBaseContext());
+//        }
+//
+//        mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+//            @Override
+//            public View getInfoWindow(final Marker marker) {
+//                final Place place = mMarkers.get(marker);
+//
+//                if (place == null || view == null) {
+//                    return view;
+//                }
+//
+//                final TextView name = (TextView) view.findViewById(R.id.place_name);
+//                final TextView address = (TextView) view.findViewById(R.id.place_address);
+//                final TextView website = (TextView) view.findViewById(R.id.place_website);
+//
+//
+//                final String placeId = place.getId();
+//                final CountDownLatch latch = new CountDownLatch(1);
+//                PlaceFetcher.getPlaceInfo(placeId, API_KEY, new PlaceFetcher.PlacesFetchedCompletionRunnable() {
+//                    @Override
+//                    public void run(final String result) {
+//                        final Place updated = PlaceFetcher.placeFromPlaceInfoJson(result);
+//                        name.setText(updated.getName());
+//                        address.setText(updated.getAddress());
+//                        website.setText(updated.getWebsiteUri().toString());
+//                    }
+//                });
+//
+//                try {
+//                    latch.await();
+//                } catch (final InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//                return view;
+//            }
+//
+//            @Override
+//            public View getInfoContents(final Marker marker) {
+//                return view;
+//            }
+//        });
     }
 
     private boolean checkLocationPermissions() {
