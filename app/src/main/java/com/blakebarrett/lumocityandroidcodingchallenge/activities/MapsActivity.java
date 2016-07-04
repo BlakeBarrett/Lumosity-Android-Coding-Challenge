@@ -24,15 +24,15 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.util.HashMap;
 import java.util.List;
-import java.util.WeakHashMap;
 import java.util.concurrent.CountDownLatch;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private static final int REQUEST_FINE_LOCATION = 80;
     String API_KEY;
-    WeakHashMap<Marker, Place> mMarkers = new WeakHashMap<>();
+    HashMap<Marker, Place> mMarkers = new HashMap<>();
     private LocationManager locationManager;
     private GoogleMap mMap;
 
@@ -66,12 +66,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(final GoogleMap googleMap) {
         mMap = googleMap;
 
-        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
-            @Override
-            public boolean onMarkerClick(final Marker marker) {
-                return false;
-            }
-        });
+//        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+//            @Override
+//            public boolean onMarkerClick(final Marker marker) {
+//                return false;
+//            }
+//        });
 
         final ViewStub stub = (ViewStub) findViewById(R.id.map_info_window);
         final View view;
@@ -84,15 +84,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
             @Override
             public View getInfoWindow(final Marker marker) {
-                return view;
-            }
-
-            @Override
-            public View getInfoContents(final Marker marker) {
-
                 final Place place = mMarkers.get(marker);
+
                 if (place == null || view == null) {
-                    return null;
+                    return view;
                 }
 
                 final TextView name = (TextView) view.findViewById(R.id.place_name);
@@ -117,6 +112,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 } catch (final InterruptedException e) {
                     e.printStackTrace();
                 }
+                return view;
+            }
+
+            @Override
+            public View getInfoContents(final Marker marker) {
                 return view;
             }
         });
